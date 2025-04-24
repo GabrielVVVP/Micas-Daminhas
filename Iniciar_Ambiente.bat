@@ -1,4 +1,3 @@
-REM filepath: /c:/Users/BielV/OneDrive/Área de Trabalho/Projetos Pessoais/Micas Daminhas/Iniciar_Ambiente.bat
 @echo off
 cd /d "%~dp0"
 
