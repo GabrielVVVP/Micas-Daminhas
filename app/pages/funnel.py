@@ -73,7 +73,7 @@ def funnel_report():
     # Merge orcamentos values into participantes
     if not orcamentos.empty:
         participantes = participantes.merge(
-            orcamentos[["Participante_id", "Valor Pago", "Valor Total", "Tipo de Pagamento", "Status"]],
+            orcamentos[["Participante_id", "Valor Total", "Status"]],
             left_on="id",
             right_on="Participante_id",
             how="left"
@@ -82,23 +82,22 @@ def funnel_report():
         participantes.rename(columns={"Status_x": "Status Participante", "Status_y": "Status Orçamento"}, inplace=True)
 
         # Fill null values with "Orçamento não existente"
-        participantes[["Valor Pago", "Valor Total", "Tipo de Pagamento"]] = participantes[
-            ["Valor Pago", "Valor Total", "Tipo de Pagamento"]
-        ].fillna("Não existente")
+        participantes[["Valor Total"]] = participantes[
+            ["Valor Total"]
+        ].fillna(0)
 
-        # Ensure consistent data types for 'Tipo de Pagamento'
-        participantes["Tipo de Pagamento"] = participantes["Tipo de Pagamento"].astype(str)
+        participantes[["Status Orçamento"]] = participantes[
+            ["Status Orçamento"]
+        ].fillna("Não Existente")
 
         # Move "Valor Pago", "Valor Total", and "Tipo de Pagamento" after "Status"
-        for column in ["Valor Pago", "Valor Total", "Tipo de Pagamento"]:
+        for column in ["Valor Total"]:
             col_data = participantes.pop(column)
             status_index = participantes.columns.get_loc("Status Participante")
             participantes.insert(status_index + 1, column, col_data)
     else:
         # Handle case where orcamentos is empty
-        participantes["Valor Pago"] = "Não Existente"
-        participantes["Valor Total"] = "Não Existente"
-        participantes["Tipo de Pagamento"] = "Não Existente"
+        participantes["Valor Total"] = 0
         participantes["Status Orçamento"] = "Não Existente"
 
     # Ensure 'Status Orçamento' column exists or fallback to 'Status Participante'
@@ -126,65 +125,88 @@ def funnel_report():
 
         total_novo_cadastro = len(participantes[participantes["Status Participante"]=="Novo Cadastro"])
         total_cadastro_modificado = len(participantes[participantes["Status Participante"]=="Cadastro Modificado"])
-        total_cadastro_orcamento_criado = len(participantes[participantes["Status Orçamento"]=="Novo Orçamento"])
-        total_cadastro_orcamento_deletado = len(participantes[participantes["Status Orçamento"]=="Não Existente"])
-        total_cadastro_orcamento_atualizado = len(participantes[participantes["Status Orçamento"]=="Orçamento Atualizado"])
-        total_cadastro_orcamento_completo = len(participantes[participantes["Status Orçamento"]=="Pagamento Completo"])
-        total_cadastro_orcamento_nao_completo = len(participantes) - total_cadastro_orcamento_completo
+        total_orcamento_criado = len(participantes[participantes["Status Orçamento"]=="Novo Orçamento"])
+        total_orcamento_nao_existente = len(participantes[participantes["Status Orçamento"]=="Não Existente"])
+        total_orcamento_atualizado = len(participantes[participantes["Status Orçamento"]=="Orçamento Atualizado"])
+        total_orcamento_parcial = len(participantes[participantes["Status Orçamento"]=="Pagamento Parcial"])
+        total_orcamento_completo = len(participantes[participantes["Status Orçamento"]=="Pagamento Completo"])
+        total_orcamento_nao_completo = len(participantes) - total_orcamento_completo
         if status_filter_p == "Todos" and status_filter_o == "Todos":
             with st.container(border=True):
+                st.markdown("### Números no Período")
+                st.write(f"**Total Eventos:** {len(eventos)}")
+                st.write(f"**Total Participantes:** {len(participantes)}")
                 st.markdown("### Status dos Participantes dos Eventos")
                 st.write(f"**Total Novo Cadastro:** {total_novo_cadastro}")
                 st.write(f"**Total Cadastro Modificado:** {total_cadastro_modificado}")
                 st.write("")
                 st.markdown("### Status dos Orçamentos dos Participantes dos Eventos")
-                st.write(f"**Total Orçamento Não Existente:** {total_cadastro_orcamento_deletado}")
-                st.write(f"**Total Novo Orçamento:** {total_cadastro_orcamento_criado}")
-                st.write(f"**Total Orçamento Atualizado:** {total_cadastro_orcamento_atualizado}")
-                st.write(f"**Total Pagamento Completo:** {total_cadastro_orcamento_completo}")
+                st.write(f"**Total Orçamento Não Existente:** {total_orcamento_nao_existente}")
+                st.write(f"**Total Novo Orçamento:** {total_orcamento_criado}")
+                st.write(f"**Total Orçamento Atualizado:** {total_orcamento_atualizado}")
+                st.write(f"**Total Pagamento Parcial:** {total_orcamento_parcial}")
+                st.write(f"**Total Pagamento Completo:** {total_orcamento_completo}")
                 st.write("")
                 status_counts = {
-                    "Orçamento Não Existente": total_cadastro_orcamento_deletado,
-                    "Novo Orçamento": total_cadastro_orcamento_criado,
-                    "Orçamento Atualizado": total_cadastro_orcamento_atualizado,
-                    "Pagamento Completo": total_cadastro_orcamento_completo
+                    "Orçamento Não Existente": total_orcamento_nao_existente,
+                    "Novo Orçamento": total_orcamento_criado,
+                    "Orçamento Atualizado": total_orcamento_atualizado,
+                    "Pagamento Parcial": total_orcamento_parcial,
+                    "Pagamento Completo": total_orcamento_completo
                 }
                 status_df_1 = pd.DataFrame(list(status_counts.items()), columns=["Status", "Count"])
-                fig_1 = px.pie(status_df_1, values="Count", names="Status", title="Distribuição de Status dos Orçamentos")
-                st.plotly_chart(fig_1)
+                if (total_orcamento_nao_existente+total_orcamento_criado+total_orcamento_atualizado+total_orcamento_parcial+total_orcamento_completo) != 0:
+                    fig_1 = px.pie(status_df_1, values="Count", names="Status", title="Distribuição de Status dos Orçamentos", color="Status",
+                    color_discrete_map={
+                        "Orçamento Não Existente": "red",
+                        "Novo Orçamento": "lightblue",
+                        "Orçamento Atualizado": "blue",
+                        "Pagamento Parcial": "lightgreen",
+                        "Pagamento Completo": "green"
+                    })
+                    st.plotly_chart(fig_1)
 
                 st.markdown("### Status Gerais")
-                st.write(f"**Total Completo:** {total_cadastro_orcamento_completo}")
-                st.write(f"**Total Não Completo:** {total_cadastro_orcamento_nao_completo}")
-                st.write(f"**Total:** {total_cadastro_orcamento_completo+total_cadastro_orcamento_nao_completo}")
+                st.write(f"**Total Completo:** {total_orcamento_completo}")
+                st.write(f"**Total Não Completo:** {total_orcamento_nao_completo}")
+                st.write(f"**Total:** {total_orcamento_completo+total_orcamento_nao_completo}")
                 status_counts = {
-                    "Total Completo": total_cadastro_orcamento_nao_completo,
-                    "Total Não Completo": total_cadastro_orcamento_completo
+                    "Total Completo": total_orcamento_completo,
+                    "Total Não Completo": total_orcamento_nao_completo
                 }
                 status_df_2 = pd.DataFrame(list(status_counts.items()), columns=["Status", "Count"])
-                fig_2 = px.pie(status_df_2, values="Count", names="Status", title="Distribuição de Status dos Pagamentos")
-                st.plotly_chart(fig_2)
+                if (total_orcamento_nao_existente+total_orcamento_criado+total_orcamento_atualizado+total_orcamento_parcial+total_orcamento_completo) != 0:
+                    fig_2 = px.pie(status_df_2, values="Count", names="Status", title="Distribuição de Status dos Pagamentos", color="Status", color_discrete_map={
+                        "Total Completo": "green",
+                        "Total Não Completo": "red"
+                    })
+                    st.plotly_chart(fig_2)
         elif status_filter_p == "Todos" and status_filter_o == "Todos (exceto Pagamento Completo)":
             with st.container(border=True):
+                st.markdown("### Números no Período")
+                st.write(f"**Total Eventos:** {len(eventos)}")
+                st.write(f"**Total Participantes:** {len(participantes)}")
                 st.markdown("### Status dos Participantes dos Eventos")
                 st.write(f"**Total Novo Cadastro:** {total_novo_cadastro}")
                 st.write(f"**Total Cadastro Modificado:** {total_cadastro_modificado}")
                 st.write("")
                 st.markdown("### Status dos Orçamentos dos Participantes dos Eventos")
-                st.write(f"**Total Orçamento Não Existente:** {total_cadastro_orcamento_deletado}")
-                st.write(f"**Total Novo Orçamento:** {total_cadastro_orcamento_criado}")
-                st.write(f"**Total Orçamento Atualizado:** {total_cadastro_orcamento_atualizado}")
+                st.write(f"**Total Orçamento Não Existente:** {total_orcamento_nao_existente}")
+                st.write(f"**Total Novo Orçamento:** {total_orcamento_criado}")
+                st.write(f"**Total Orçamento Atualizado:** {total_orcamento_atualizado}")
+                st.write(f"**Total Pagamento Parcial:** {total_orcamento_parcial}")
                 st.write("")
-                st.write(f"**Total Não Completo:** {total_cadastro_orcamento_nao_completo}")
+                st.write(f"**Total Não Completo:** {total_orcamento_nao_completo}")
 
                 status_counts = {
-                    "Novo Orçamento": total_cadastro_orcamento_criado,
-                    "Orçamento Não Existente": total_cadastro_orcamento_deletado,
-                    "Orçamento Atualizado": total_cadastro_orcamento_atualizado
+                    "Orçamento Não Existente": total_orcamento_nao_existente,
+                    "Novo Orçamento": total_orcamento_criado,
+                    "Orçamento Atualizado": total_orcamento_atualizado
                 }
                 status_df = pd.DataFrame(list(status_counts.items()), columns=["Status", "Count"])
-                fig = px.pie(status_df, values="Count", names="Status", title="Distribuição de Status dos Eventos")
-                st.plotly_chart(fig)
+                if total_orcamento_nao_completo != 0:
+                    fig = px.pie(status_df, values="Count", names="Status", title="Distribuição de Status dos Eventos")
+                    st.plotly_chart(fig)    
         else:
             with st.container(border=True):
                 st.markdown("### Status dos Eventos")
@@ -193,12 +215,12 @@ def funnel_report():
                 elif status_filter_p == "Cadastro Modificado":
                     st.write(f"**Total Cadastro Modificado:** {total_cadastro_modificado}")
                 elif status_filter_o == "Novo Orçamento":
-                    st.write(f"**Total Novo Orçamento:** {total_cadastro_orcamento_criado}")
+                    st.write(f"**Total Novo Orçamento:** {total_orcamento_criado}")
                 elif status_filter_o == "Não Existente":
-                    st.write(f"**Total Não Existente:** {total_cadastro_orcamento_deletado}")
+                    st.write(f"**Total Não Existente:** {total_orcamento_nao_existente}")
                 elif status_filter_o == "Orçamento Atualizado":
-                    st.write(f"**Total Orçamento Atualizado:** {total_cadastro_orcamento_atualizado}")
+                    st.write(f"**Total Orçamento Atualizado:** {total_orcamento_atualizado}")
                 elif status_filter_o == "Pagamento Completo":
-                    st.write(f"**Total Pagamento Completo:** {total_cadastro_orcamento_completo}")
+                    st.write(f"**Total Pagamento Completo:** {total_orcamento_completo}")
     else:   
         st.warning("Nenhum cliente encontrado.")

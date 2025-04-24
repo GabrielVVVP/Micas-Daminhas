@@ -1,6 +1,3 @@
-env/
 __pycache__
-data/Micas_Daminhas.db
-data/contratos/devolução/
-data/contratos/retirada/
-data/relatórios/
+env/
+data/

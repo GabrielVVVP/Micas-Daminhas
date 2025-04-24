@@ -81,7 +81,6 @@ class TestHelpers(unittest.TestCase):
         df = pd.DataFrame([{
             "Evento_id": 1,
             "Data": "2023-10-01",
-            "Responsável Financeiro": "João",
             "Nome": "Ana",
             "Tipo": "Daminha",
             "Telefone": "123456789",
@@ -100,7 +99,6 @@ class TestHelpers(unittest.TestCase):
         df = pd.DataFrame([{
             "Evento_id": 1,
             "Data": "2023-10-01",
-            "Responsável Financeiro": "João",
             "Nome": "Ana",
             "Tipo": "Daminha",
             "Telefone": "123456789",
@@ -116,7 +114,6 @@ class TestHelpers(unittest.TestCase):
         updated_df = pd.DataFrame([{
             "id": participante_id,
             "Evento_id": 1,
-            "Responsável Financeiro": "João",
             "Nome": "Ana Maria",  # Updated name
             "Tipo": "Daminha",
             "Telefone": "987654321",  # Updated phone
@@ -135,7 +132,6 @@ class TestHelpers(unittest.TestCase):
         df = pd.DataFrame([{
             "Evento_id": 1,
             "Data": "2023-10-01",
-            "Responsável Financeiro": "João",
             "Nome": "Ana",
             "Tipo": "Daminha",
             "Telefone": "123456789",

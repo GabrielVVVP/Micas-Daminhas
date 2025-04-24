@@ -32,11 +32,12 @@ def atualizar_dados_caixa(df):
             data = pd.to_datetime(row['Data']).strftime('%Y-%m-%d %H:%M:%S') if pd.notnull(row['Data']) else None
             c.execute('''UPDATE caixa SET 
                             [Data] = ?,
+                            [Origem] = ?, 
                             [Observação] = ?, 
                             [Valor] = ?, 
                             [Operação] = ?
                         WHERE id = ?''', 
-                        (data, row['Observação'], row['Valor'], row['Operação'], row['id']))
+                        (data, row['Origem'], row['Observação'], row['Valor'], row['Operação'], row['id']))
         conn.commit()        
 
 def atualizar_dados_caixa_id(df):
@@ -47,11 +48,12 @@ def atualizar_dados_caixa_id(df):
             data = pd.to_datetime(row['Data']).strftime('%Y-%m-%d %H:%M:%S') if pd.notnull(row['Data']) else None
             c.execute('''UPDATE caixa SET 
                             [Data] = ?,
+                            [Origem] = ?, 
                             [Observação] = ?, 
                             [Valor] = ?, 
                             [Operação] = ?
                         WHERE Participante_id = ?''', 
-                        (data, row['Observação'], row['Valor'], row['Operação'], row['Participante_id']))
+                        (data, row['Origem'], row['Observação'], row['Valor'], row['Operação'], row['Participante_id']))
             rows_updated += c.rowcount
         conn.commit()
         if rows_updated == 0:

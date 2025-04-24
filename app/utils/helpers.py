@@ -31,39 +31,26 @@ def initialize_database():
                         [Account_Type] TEXT,
                         [Password] TEXT  
                     )''')
-        c.execute('''CREATE TABLE IF NOT EXISTS pagamentos (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        [Data] DATE,
-                        [Noiva] TEXT,
-                        [Data do Casamento] DATE, 
-                        [Valor Total] REAL,     
-                        [Forma de Pagamento] TEXT,
-                        [Observação] TEXT,
-                        [Taxa de Desconto] REAL,
-                        [Valor Pago] REAL,
-                        [Status] TEXT
-                    )''')
         c.execute('''CREATE TABLE IF NOT EXISTS pagamentos_eventos (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        [Evento_id] TEXT,
-                        [Participante_id] TEXT,
-                        [Orcamento_id] TEXT,
+                        [Evento_id] INTEGER,
+                        [Participante_id] INTEGER,
                         [Data do Evento] DATE,
                         [Data do Pagamento] DATE,
-                        [Responsável Financeiro] TEXT,
-                        [Tipo_Evento] TEXT,
-                        [Valor Total] REAL,     
+                        [Tipo Evento] TEXT,
+                        [Tipo Pagamento] TEXT,  
                         [Forma de Pagamento] TEXT,
-                        [Taxa de Desconto] REAL,
                         [Valor Pago] REAL,
-                        [Valor Restante] REAL,
+                        [Taxa da Máquina] REAL,
+                        [Valor Recebido] REAL,
                         [Observação] TEXT,
                         [Status] TEXT
                     )''')
         c.execute('''CREATE TABLE IF NOT EXISTS caixa (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        [Participante_id] TEXT,
+                        [Participante_id] INTEGER,
                         [Data] DATE,
+                        [Origem] TEXT,
                         [Observação] TEXT,
                         [Valor] REAL,
                         [Operação] TEXT   
@@ -74,16 +61,17 @@ def initialize_database():
                         [Data do Evento] DATE,
                         [Nome] TEXT,
                         [Telefone] TEXT,
+                        [Email] TEXT,
                         [Endereço] TEXT,	
                         [CPF] TEXT,
-                        [Tipo_Evento] TEXT,
+                        [Tipo Evento] TEXT,
+                        [Tipo Pagamento] TEXT,
                         [Status] TEXT
                     )''')
         c.execute('''CREATE TABLE IF NOT EXISTS participantes (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         [Evento_id] INTEGER,
                         [Data] DATE,
-                        [Responsável Financeiro] TEXT,
                         [Nome] TEXT,
                         [Tipo] TEXT,
                         [Telefone] TEXT,
@@ -103,11 +91,14 @@ def initialize_database():
                         [Acessórios] TEXT,
                         [Observação] TEXT, 
                         [Valor Total] REAL,
-                        [Desconto] REAL,
-                        [Valor Pago] REAL,
-                        [Tipo de Pagamento] TEXT,
+                        [Taxa de Desconto] REAL,
+                        [Valor com Desconto] REAL,
+                        [Data Retirada] DATE,
+                        [Estado Retirada] TEXT,
                         [Contrato Retirada] TEXT,
                         [Status Contrato Retirada] TEXT,
+                        [Data Devolução] DATE,
+                        [Estado Devolução] TEXT,
                         [Contrato Devolução] TEXT,
                         [Status Contrato Devolução] TEXT,
                         [Status] TEXT	
@@ -125,11 +116,14 @@ def initialize_database():
                         [Acessórios] TEXT,
                         [Observação] TEXT,  
                         [Valor Total] REAL,
-                        [Desconto] REAL,
-                        [Valor Pago] REAL,
-                        [Tipo de Pagamento] TEXT,
+                        [Taxa de Desconto] REAL,
+                        [Valor com Desconto] REAL,
+                        [Data Retirada] DATE,
+                        [Estado Retirada] TEXT,
                         [Contrato Retirada] TEXT,
                         [Status Contrato Retirada] TEXT,
+                        [Data Devolução] DATE,
+                        [Estado Devolução] TEXT,
                         [Contrato Devolução] TEXT,
                         [Status Contrato Devolução] TEXT,
                         [Status] TEXT
@@ -140,8 +134,29 @@ def initialize_database():
             c.execute("INSERT INTO users (Nome, Email, Account_Type, Password) VALUES (?, ?, ?, ?)", ("Admin", "admin@micas.com.br", "Admin", hash_password("123456")))
         conn.commit()        
 
+def ensure_month_year_folder(base_path, date):
+    """
+    Ensures a folder named 'month_year' exists in the given path. If not, creates it.
+
+    Args:
+        base_path (str): The base directory path.
+        date (datetime.date): The date to use for the folder name.
+
+    Returns:
+        str: The full path to the 'month_year' folder.
+    """
+    # Format the folder name as "month_year" (e.g., "April_2025")
+    folder_name = date.strftime("%m_%Y")
+    folder_path = os.path.join(base_path, folder_name)
+
+    # Check if the folder exists, and create it if not
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+    return folder_path
+
 # Função para exportar os dados mantendo formatação
-def exportar_para_excel(df, file_path, min_date = datetime.datetime.today().date(), max_date = datetime.datetime.today().date()):
+def exportar_para_excel(df, file_path, min_date=datetime.datetime.today().date(), max_date=datetime.datetime.today().date()):
     wb = Workbook()
     ws = wb.active
 
@@ -160,25 +175,31 @@ def exportar_para_excel(df, file_path, min_date = datetime.datetime.today().date
                          top=Side(style='thin'), 
                          bottom=Side(style='thin'))
     thick_border = Border(left=Side(style='thick'), 
-                         right=Side(style='thick'), 
-                         top=Side(style='thick'), 
-                         bottom=Side(style='thick'))
+                          right=Side(style='thick'), 
+                          top=Side(style='thick'), 
+                          bottom=Side(style='thick'))
     
     # Add column headers starting from row 4
     ws.append([""] * len(df.columns))  # Empty row 2
     ws.append([""] * len(df.columns))  # Empty row 3
     ws.append(df.columns.tolist())
     for cell in ws[ws.max_row]:
-            cell.border = thick_border
-    
+        cell.border = thick_border
+
+    # Adjust column widths based on column names
+    for col_idx, column_name in enumerate(df.columns, start=1):
+        column_letter = ws.cell(row=4, column=col_idx).column_letter
+        ws.column_dimensions[column_letter].width = max(len(column_name) + 2, 15)  # Add padding for better visibility
+
+    # Add data rows
     for row in df.itertuples(index=False):
         ws.append(row)
         for cell in ws[ws.max_row]:
             cell.border = thin_border
-            if row[10] == "Depósito":  # Índice da coluna "Forma de Pagamento"
+            if row[4] == "Depósito":  # Índice da coluna "Forma de Pagamento"
                 cell.fill = green_fill
 
-    wb.save(file_path) 
+    wb.save(file_path)
 
 def is_valid_email(email):
     # Regex to validate email format
