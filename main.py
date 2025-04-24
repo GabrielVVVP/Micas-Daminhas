@@ -1,6 +1,6 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
-from app.pages import clients, home, participants, login, profile, register, payment, edit, report, funnel, budget, contracts
+from app.pages import clients, home, participants, login, profile, register, payment, edit, funnel, budget, contracts
 from app.utils.helpers import initialize_database  
 
 # Database setup
@@ -38,8 +38,8 @@ def main():
             st.sidebar.title("Vendas - Micas Daminhas")
             st.sidebar.write("Bem vinda " + st.session_state.user_name + "!")
             with st.sidebar:
-                menu = option_menu("Menu Principal", ["Tela Inicial","Cadastro Clientes","Cadastro Participantes", "Orçamento e Medidas", "Pagamentos e Contratos","Funil de Processos","Perfil"], 
-                    icons=['house', 'building-fill-add','person-plus', 'pencil','cash','funnel','person'], menu_icon="cast", default_index=0)
+                menu = option_menu("Menu Principal", ["Tela Inicial","Cadastro Clientes","Cadastro Participantes", "Orçamento e Medidas", "Contratos", "Pagamentos","Funil de Processos","Perfil"], 
+                    icons=['house', 'building-fill-add','person-plus', 'pencil','pencil','cash','funnel','person'], menu_icon="cast", default_index=0)
             logoutButton()
             if menu == "Tela Inicial":
                 home.home() 
@@ -49,7 +49,9 @@ def main():
                 participants.new_record()  
             elif menu == "Orçamento e Medidas":
                 budget.budget() 
-            elif menu == "Pagamentos e Contratos":
+            elif menu == "Contratos":
+                contracts.contracts()     
+            elif menu == "Pagamentos":
                 payment.payment()                 
             elif menu == "Funil de Processos":
                 funnel.funnel_report()
@@ -59,12 +61,12 @@ def main():
             st.sidebar.title("Admin - Micas Daminhas")
             st.sidebar.write("Bem vinda " + st.session_state.user_name + "!")
             with st.sidebar:
-                menu = option_menu("Menu Principal", ["Tela Inicial","Novos Registros","Relatório de Clientes","Financeiro Micas Daminhas", "Perfil"], 
-                    icons=['house', 'cash','book', 'pencil-square','person'], menu_icon="cast", default_index=0)
+                menu = option_menu("Menu Principal", ["Tela Inicial","Funil de Registros","Relatório de Clientes","Financeiro Micas Daminhas", "Perfil"], 
+                    icons=['house','pencil-square','book','cash','person'], menu_icon="cast", default_index=0)
             logoutButton()
             if menu == "Tela Inicial":
                 home.home()  
-            elif menu == "Novos Registros":
+            elif menu == "Funil de Registros":
                 edit.edit_record()       
             elif menu == "Relatório de Clientes":
                 funnel.funnel_report()    

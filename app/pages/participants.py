@@ -12,14 +12,28 @@ def new_record():
     conn = get_db_connection()
 
     clientes = pd.read_sql_query("SELECT * FROM eventos", conn)
+    
     # Update start_date and end_date to use "Data" from eventos
+    fallback_date = dt.date.today()
     min_date = pd.to_datetime(clientes["Data"], errors="coerce").min()
     max_date = pd.to_datetime(clientes["Data"], errors="coerce").max()
 
-    # Fallback to today's date if min_date or max_date is NaT
-    fallback_date = dt.date.today()
-    start_date = st.date_input("Data Inicial", value=min_date if pd.notna(min_date) else fallback_date)
-    end_date = st.date_input("Data Final", value=max_date if pd.notna(max_date) else fallback_date)
+    # Replace buttons with a select box for date range selection
+    date_option = st.selectbox("Selecione o período", ["Dia", "Mês", "Ano", "Seletor de Datas"], index=1)
+
+    if date_option == "Dia":
+        start_date = dt.date.today()
+        end_date = dt.date.today()
+    elif date_option == "Mês":
+        start_date = dt.date.today().replace(day=1)
+        end_date = (dt.date.today().replace(day=1) + dt.timedelta(days=31)).replace(day=1) - dt.timedelta(days=1)
+    elif date_option == "Ano":
+        start_date = dt.date.today().replace(month=1, day=1)
+        end_date = dt.date.today().replace(month=12, day=31)
+    elif date_option == "Seletor de Datas":
+        start_date = st.date_input("Data Inicial", value=min_date if pd.notna(min_date) else fallback_date)
+        end_date = st.date_input("Data Final", value=max_date if pd.notna(max_date) else fallback_date)
+
     filtered_clientes = clientes[
         (pd.to_datetime(clientes["Data"], errors="coerce") >= pd.to_datetime(start_date)) &
         (pd.to_datetime(clientes["Data"], errors="coerce") <= pd.to_datetime(end_date))
@@ -31,7 +45,7 @@ def new_record():
         evento_id = dados_cliente["id"].values[0]
         participantes = pd.read_sql_query(f"SELECT * FROM participantes WHERE Evento_id = {evento_id}", conn)
 
-        st.write(f"#### Evento: {dados_cliente['Tipo_Evento'].values[0]} de {cliente_selecionado}")
+        st.write(f"#### Evento: {dados_cliente['Tipo Evento'].values[0]} de {cliente_selecionado}")
         dados_cliente_show = dados_cliente.copy()
         dados_cliente_show = dados_cliente_show.drop(columns=["id", "Evento_id"], errors="ignore")
         st.write(dados_cliente_show)
@@ -71,7 +85,6 @@ def new_record():
                     else:       
                         novo_participante = {
                             "Evento_id": evento_id,
-                            "Responsável Financeiro": "Não Definido",
                             "Data": pd.to_datetime("now").date(),
                             "Nome": nome,
                             "Tipo": tipo,
@@ -116,8 +129,7 @@ def new_record():
                             else:    
                                 participante_atualizado = {
                                     "id": row["id"],
-                                    "Evento_id": evento_id,
-                                    "Responsável Financeiro": "Não Definido",	
+                                    "Evento_id": evento_id,	
                                     "Nome": nome,
                                     "Tipo": tipo,
                                     "Telefone": telefone,
@@ -138,8 +150,6 @@ def new_record():
                             confirm_delete = st.checkbox(f"Confirmo que desejo excluir o participante {row['Nome']} e todos os dados associados.", key=f'confirm_delete_{index}')
 
                             if confirm_delete:
-                                print(f"Deleting participant with ID: {row['id']}")
-                                print(f"Deleting budgets associated with Tipo: {row["Tipo"]}")
                                 deletar_dados_orcamentos(row["id"],row["Tipo"],part_id=int(row["id"]))
                                 deletar_dados_participantes([row["id"]])
                                 st.success("Participante e orçamentos associados deletados com sucesso!")

@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import datetime as dt
 import time
-from app.utils.helpers import get_db_connection, is_valid_telefone, is_valid_cpf
+from app.utils.helpers import get_db_connection, is_valid_telefone, is_valid_cpf, is_valid_email
 from app.utils.eventos import *
 
 def new_record():
@@ -11,10 +11,10 @@ def new_record():
 
     conn = get_db_connection()
 
-    option = st.selectbox("Tipo de Ação", ["Novo Cadastro", "Editar Cliente"])	
+    option = st.selectbox("Tipo de Ação", ["Novo Cliente", "Editar Cliente"])	
 
-    if option == "Novo Cadastro":
-        st.markdown("### Novo Cadastro de Cliente")
+    if option == "Novo Cliente":
+        st.markdown("### Novo Cliente")
         tipo_event = st.selectbox("Tipo de Evento", ["Casamento", "Formatura"])	
 
         with st.form(key='novo_cadastro_form'):
@@ -22,10 +22,12 @@ def new_record():
                 st.markdown(f"### Cadastro de Casamento")
                 data_casamento = st.date_input("Data do Casamento")
                 noiva = st.text_input("Noiva") 
-                telefone = st.text_input("Telefone") 
+                telefone = st.text_input("Telefone")
+                email = st.text_input("Email") 
                 endereco = st.text_input("Endereço")
                 cpf_noiva = st.text_input("CPF da Noiva")
                 tipo_evento = "Casamento"
+                tipo_pagamento = st.selectbox("Tipo de Pagamento", ["Cliente Integral", "Individual"])
                 
                 submit_button = st.form_submit_button(label="Salvar Registro")  
 
@@ -36,15 +38,19 @@ def new_record():
                         st.error("CPF inválido. Certifique-se de que contém 11 dígitos.")
                     elif not is_valid_telefone(telefone):
                         st.error("Telefone inválido. Certifique-se de que contém 11 dígitos.") 
+                    elif not is_valid_email(email):
+                        st.error("Email inválido. Certifique-se de que está no formato correto.")    
                     else:
                         novo_registro = {
                             "Data": pd.to_datetime("now").date(),
                             "Data do Evento": data_casamento,
                             "Nome": noiva,
                             "Telefone": telefone,
+                            "Email": email,  
                             "Endereço": endereco,
                             "CPF": cpf_noiva,
-                            "Tipo_Evento": tipo_evento,
+                            "Tipo Evento": tipo_evento,
+                            "Tipo Pagamento": tipo_pagamento,
                             "Status": "Novo Cliente",
                         }
                         df_novo_registro = pd.DataFrame([novo_registro])
@@ -62,8 +68,10 @@ def new_record():
                 data_formatura = st.date_input("Data da Formatura")
                 formando = st.text_input("Formando") 
                 telefone = st.text_input("Telefone")
+                email = st.text_input("Email")
                 endereco = st.text_input("Endereço") 
                 cpf_formando = st.text_input("CPF do Formando")
+                tipo_pagamento = st.selectbox("Tipo de Pagamento", ["Cliente Integral", "Individual"])
                 tipo_evento = "Formatura"
 
                 submit_button = st.form_submit_button(label="Salvar Registro")   
@@ -75,15 +83,19 @@ def new_record():
                         st.error("CPF inválido. Certifique-se de que contém 11 dígitos.")
                     elif not is_valid_telefone(telefone):
                         st.error("Telefone inválido. Certifique-se de que contém 11 dígitos.")     
+                    elif not is_valid_email(email):
+                        st.error("Email inválido. Certifique-se de que está no formato correto.")    
                     else:
                         novo_registro = {
                             "Data": pd.to_datetime("now").date(),
                             "Data do Evento": data_formatura,
                             "Nome": formando,
                             "Telefone": telefone,
+                            "Email": email,
                             "Endereço": endereco,
                             "CPF": cpf_formando,
-                            "Tipo_Evento": tipo_evento,
+                            "Tipo Evento": tipo_evento,
+                            "Tipo Pagamento": tipo_pagamento,
                             "Status": "Novo Cliente",
                         }
                         df_novo_registro = pd.DataFrame([novo_registro])
@@ -115,9 +127,11 @@ def new_record():
                 data_evento = st.date_input("Data do Evento", value=pd.to_datetime(cliente_info["Data"]))
                 nome = st.text_input("Nome", value=cliente_info["Nome"])
                 telefone = st.text_input("Telefone", value=cliente_info["Telefone"])
+                email = st.text_input("Email", value=cliente_info["Email"])
                 endereco = st.text_input("Endereço", value=cliente_info["Endereço"])
                 cpf = st.text_input("CPF", value=cliente_info["CPF"])
-                tipo_evento = st.selectbox("Tipo de Evento", ["Casamento", "Formatura"], index=["Casamento", "Formatura"].index(cliente_info["Tipo_Evento"]))
+                tipo_evento = st.selectbox("Tipo de Evento", ["Casamento", "Formatura"], index=["Casamento", "Formatura"].index(cliente_info["Tipo Evento"]))
+                tipo_pagamento = st.selectbox("Tipo de Pagamento", ["Cliente Integral", "Individual"], index=["Cliente Integral", "Individual"].index(cliente_info["Tipo Pagamento"]))
 
                 col1, col2 = st.columns(2)
                 with col1:
@@ -130,18 +144,23 @@ def new_record():
                         st.error("CPF inválido. Certifique-se de que contém 11 dígitos.")
                     elif not is_valid_telefone(telefone):
                         st.error("Telefone inválido. Certifique-se de que contém 11 dígitos.") 
+                    elif not is_valid_email(email): 
+                        st.error("Email inválido. Certifique-se de que está no formato correto.")    
                     else:    
                         update_cliente(
                             conn,
-                            cliente_info["id"],
+                            int(cliente_info["id"]),
                             data_evento,
                             nome,
                             telefone,
+                            email,
                             endereco,
                             cpf,
                             tipo_evento,
+                            tipo_pagamento,
                         )
                         st.success("Cliente atualizado com sucesso!")
+                        time.sleep(2)
                         st.rerun()
                 
                 if delete_button:
@@ -150,7 +169,7 @@ def new_record():
                     if confirm_delete:
                         try:
                             st.info("Tentando deletar cliente e dados associados...")
-                            delete_cliente_and_associated_data(9)
+                            delete_cliente_and_associated_data(int(cliente_info["id"]))
                             st.success("Cliente e dados associados deletados com sucesso!")
                             time.sleep(2)
                             st.rerun()
@@ -158,6 +177,7 @@ def new_record():
                             st.error(f"Erro ao deletar cliente: {e}")
                             st.write("Detalhes do erro:", e)  
                         finally:
+                            time.sleep(2)
                             st.info("Operação de exclusão concluída.")
                     else:
                         st.info("Marque a caixa de confirmação para prosseguir com a exclusão.")        
