@@ -11,9 +11,17 @@ from openpyxl.styles import PatternFill, Border, Side, Font
 db_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../data/Micas_Daminhas.db'))
 
 def get_db_connection():
+    # Ensure the 'data' directory exists
+    data_dir = os.path.dirname(db_path)
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+
+    # Create the database file if it doesn't exist
     if not os.path.exists(db_path):
         with open(db_path, 'w'):
             pass
+
+    # Connect to the database
     conn = sqlite3.connect(db_path, check_same_thread=False)
     return conn
 
