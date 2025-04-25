@@ -4,12 +4,12 @@ from app.utils.helpers import is_valid_password, is_valid_email
 from app.utils.users import create_user, user_exists
 
 def signup():
-    st.title("Sign Up")
+    st.title("Criar Nova Conta")
     name = st.text_input("Nome")
     email = st.text_input("Email")
     account_type = st.selectbox("Tipo de Conta", ["Vendas","Admin"])
     password = st.text_input("Password", type="password")
-    if st.button("Sign Up"):
+    if st.button("Criar Nova Conta"):
         if not is_valid_email(email):
             st.error("Por favor, insira um email válido.")
         elif not is_valid_password(password):

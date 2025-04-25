@@ -76,7 +76,8 @@ def send_reset_email(email):
         
         return True
     except Exception as e:
-        print(f"Error sending email: {e}")
+        #print(f"Error sending email: {e}")
+        print("")
         return False
 
 def get_user_id_by_email(email):

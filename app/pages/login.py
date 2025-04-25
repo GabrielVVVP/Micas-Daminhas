@@ -1,4 +1,5 @@
 import streamlit as st
+from data.config import mstr_key
 from app.utils.users import authenticate_user, send_reset_email, is_only_admin_user
 
 def login():
@@ -22,7 +23,7 @@ def login():
                     st.warning("Por favor, preencha todos os campos.")
                 elif new_password != confirm_password:
                     st.error("As senhas não coincidem.")
-                elif master_key != "Micas@SenhaMestre":
+                elif master_key != mstr_key:
                     st.error("Chave Mestre inválida.")
                 else:
                     # Aqui você pode adicionar a lógica para alterar a senha no banco de dados

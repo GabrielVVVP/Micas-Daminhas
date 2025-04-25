@@ -62,7 +62,6 @@ def display_report():
 
                 # Determine the orcamento source based on Tipo of Participante
                 if pd.notna(pagamento["Participante_id"]):
-                    print("Yes")
                     valor_total = 0
                     valor_com_desconto = 0
 
@@ -147,7 +146,7 @@ def display_report():
         # Botão para exportar com formatação
         if st.button("Exportar para Excel", type="primary"):
             excel_df = merged_df.copy()
-            columns_to_drop = ["id", "Nome (Participante)", "Tipo de Pagamento", "Valor Total", "Valor Total Desconto", "Valor Restante", "Status"]
+            columns_to_drop = ["id", "Nome (Participante)", "Tipo de Pagamento", "Valor Total", "Valor com Desconto", "Valor Restante", "Status"]
             existing_columns = [col for col in columns_to_drop if col in excel_df.columns]
             excel_df = excel_df.drop(columns=existing_columns)
             data_start = start_date if start_date != None else datetime.datetime.today().date()
@@ -275,7 +274,7 @@ def display_report():
         # Botão para exportar para PDF
         if st.button("Exportar para PDF"): 
             if evento_selecionado == "Todos":
-                base_path, pdf_path = exportar_pagamentos_para_pdf(start_date, end_date, total_valor_credito, total_valor_pago_credito, total_valor_debito, total_valor_pago_debito, total_valor_deposito, total_valor_dinheiro, total_retiradas, df_retiradas)
+                base_path, pdf_path = exportar_pagamentos_para_pdf(start_date, end_date, total_valor_credito, total_valor_pago_credito, total_valor_debito, total_valor_pago_debito, total_valor_deposito, total_valor_dinheiro, total_retiradas, df_retiradas, total_entradas, df_entradas)
                 st.success(f"Arquivo PDF salvo como {base_path+pdf_path}")
                 st.download_button(
                     label="Baixar PDF",

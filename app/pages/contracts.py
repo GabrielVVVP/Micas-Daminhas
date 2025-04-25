@@ -97,7 +97,8 @@ def contracts():
             else:
                 st.warning("Nenhum orçamento encontrado para os meninos.")    
 
-            orcamentos = pd.concat([orcamento_meninas, orcamento_meninos], ignore_index=True)
+            dataframes = [df for df in [orcamento_meninas, orcamento_meninos] if not df.empty and not df.isna().all().all()]
+            orcamentos = pd.concat(dataframes, ignore_index=True)
 
             st.info("**Atenção:** O contrato de devolução só pode ser gerado após a assinatura do contrato de retirada.")
 

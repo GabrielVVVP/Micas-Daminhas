@@ -85,7 +85,7 @@ def payment():
                     st.warning("Nenhum pagamento encontrado para este evento.")
                     valor_pago_total = 0
                 else: 
-                    cum_val_receb = old_payments["Valor Recebido"].cumsum()
+                    cum_val_receb = old_payments["Valor Pago"].cumsum()
                     valor_pago_total = old_payments["Valor Pago"].sum()
                     old_payments["Valor Total"] = participantes["Valor Total"].sum()
                     old_payments["Valor Total Desconto"] = participantes["Valor com Desconto"].sum()
@@ -95,13 +95,13 @@ def payment():
             else:        
                 participante_selecionado = st.selectbox("Selecione o Participante", participantes["Nome"])
                 participante_dados = participantes[participantes["Nome"] == participante_selecionado].iloc[0]
-                participantes = participante_dados
+                #participantes = participante_dados
                 participante_id = participante_dados["id"]
-                total_sum = participantes["Valor Total"].sum()
-                total_discount = participantes["Valor com Desconto"].sum()
+                total_sum = participante_dados["Valor Total"].sum()
+                total_discount = participante_dados["Valor com Desconto"].sum()
                 total_aggregate_discount = (1-(total_discount/total_sum))*100
                 st.markdown("### Orçamento do Participante do Evento")
-                st.dataframe(participantes, use_container_width=True)
+                st.dataframe(participante_dados, use_container_width=True)
                 old_payments = verificar_pagamento_participantes(participante_dados["id"])
 
                 st.markdown("### Pagamentos Anteriores deste Participante")
@@ -109,10 +109,10 @@ def payment():
                     st.warning("Nenhum pagamento encontrado para este participante.")
                     valor_pago_total = 0.0
                 else: 
-                    cum_val_receb = old_payments["Valor Recebido"].cumsum()
-                    old_payments["Valor Total"] = participantes["Valor Total"].sum()
+                    cum_val_receb = old_payments["Valor Pago"].cumsum()
                     valor_pago_total = old_payments["Valor Pago"].sum()
-                    old_payments["Valor Total Desconto"] = participantes["Valor com Desconto"].sum()
+                    old_payments["Valor Total"] = participante_dados["Valor Total"]
+                    old_payments["Valor Total Desconto"] = participante_dados["Valor com Desconto"]
                     old_payments["Valor Restante"] = old_payments["Valor Total Desconto"] - cum_val_receb
                     st.dataframe(old_payments, use_container_width=True)
                    
@@ -143,7 +143,7 @@ def payment():
                     data_do_pagamento = st.date_input("Data do Pagamento")    
                     pagamento = st.number_input("Pagamento", min_value=0.0, max_value=valor_remanescente, value=0.0)
                     valor_recebido = pagamento
-                    if forma_pagamento == "Crédito":
+                    if (forma_pagamento == "Crédito") or (forma_pagamento == "Débito"):
                         taxa_maquina = st.number_input("Taxa da Máquina (R$)", min_value=0.0, value=0.0)
                         valor_recebido = pagamento - taxa_maquina
                         st.markdown(f"###### Valor Recebido (Retirando Taxa da Máquina): R$ {valor_recebido:.2f}")

@@ -43,7 +43,7 @@ def delete_cliente_and_associated_data(cliente_id):
         """)
         if cursor.fetchone():
             cursor.execute("DELETE FROM orcamentos_meninos WHERE Evento_id = ?", (cliente_id,))
-            print(f"Deleted rows in orcamentos_meninos: {cursor.rowcount}")
+            #print(f"Deleted rows in orcamentos_meninos: {cursor.rowcount}")
 
         # Check if the table `orcamento_meninas` exists and contains data
         cursor.execute("""
@@ -51,7 +51,7 @@ def delete_cliente_and_associated_data(cliente_id):
         """)
         if cursor.fetchone():
             cursor.execute("DELETE FROM orcamentos_meninas WHERE Evento_id = ?", (cliente_id,))
-            print(f"Deleted rows in orcamentos_meninas: {cursor.rowcount}")
+            #print(f"Deleted rows in orcamentos_meninas: {cursor.rowcount}")
 
         # Check if the table `participantes` exists and contains data
         cursor.execute("""
@@ -59,7 +59,7 @@ def delete_cliente_and_associated_data(cliente_id):
         """)
         if cursor.fetchone():
             cursor.execute("DELETE FROM participantes WHERE Evento_id = ?", (cliente_id,))
-            print(f"Deleted rows in participantes: {cursor.rowcount}")
+            #print(f"Deleted rows in participantes: {cursor.rowcount}")
 
         # Check if the table `participantes` exists and contains data
         cursor.execute("""
@@ -67,7 +67,7 @@ def delete_cliente_and_associated_data(cliente_id):
         """)
         if cursor.fetchone():
             cursor.execute("DELETE FROM pagamentos_eventos WHERE Evento_id = ?", (cliente_id,))
-            print(f"Deleted rows in pagamentos_eventos: {cursor.rowcount}")    
+            #print(f"Deleted rows in pagamentos_eventos: {cursor.rowcount}")    
 
         # Check if the table `eventos` exists and contains data
         cursor.execute("""
@@ -75,11 +75,11 @@ def delete_cliente_and_associated_data(cliente_id):
         """)
         if cursor.fetchone():
             cursor.execute("DELETE FROM eventos WHERE id = ?", (cliente_id,))
-            print(f"Deleted rows in eventos: {cursor.rowcount}")
+            #print(f"Deleted rows in eventos: {cursor.rowcount}")
 
         # Commit the transaction
         conn.commit()
-        print(f"Deletion committed for id: {cliente_id}")
+        #print(f"Deletion committed for id: {cliente_id}")
         cursor.close()
 
 def get_eventos_param_by_ids(event_ids, param):

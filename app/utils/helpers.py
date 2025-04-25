@@ -140,7 +140,25 @@ def initialize_database():
         c.execute("SELECT COUNT(*) FROM users")
         if c.fetchone()[0] == 0:
             c.execute("INSERT INTO users (Nome, Email, Account_Type, Password) VALUES (?, ?, ?, ?)", ("Admin", "admin@micas.com.br", "Admin", hash_password("123456")))
-        conn.commit()        
+        conn.commit() 
+
+def convert_date_format(date_str):
+    """
+    Converts a date string from 'yy-mm-dd' to 'dd-mm-yy'.
+
+    Args:
+        date_str (str): The date string in 'yy-mm-dd' format.
+
+    Returns:
+        str: The date string in 'dd-mm-yy' format.
+    """
+    try:
+        # Parse the input date string
+        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+        # Format the date object to 'dd-mm-yy'
+        return date_obj.strftime("%d-%m-%Y")
+    except ValueError:
+        raise ValueError("Invalid date format. Expected 'Y-mm-dd'.")               
 
 def ensure_month_year_folder(base_path, date):
     """
@@ -172,9 +190,9 @@ def exportar_para_excel(df, file_path, min_date=datetime.datetime.today().date()
     bold_font = Font(bold=True)
     ws['A1'] = "Caixa Enviado"
     ws['A1'].font = bold_font
-    ws['B1'] = min_date.strftime("%Y-%m-%d")
+    ws['B1'] = convert_date_format(min_date.strftime("%Y-%m-%d"))
     ws['B1'].font = bold_font
-    ws['C1'] = max_date.strftime("%Y-%m-%d")
+    ws['C1'] = convert_date_format(max_date.strftime("%Y-%m-%d"))
     ws['C1'].font = bold_font
 
     green_fill = PatternFill(start_color="A8D08D", end_color="A8D08D", fill_type="solid")

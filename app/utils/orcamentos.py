@@ -68,7 +68,8 @@ def deletar_dados_orcamentos(id, part_tipo, part_id=None):
             conn.commit()
 
     except Exception as e:
-        print(f"Error in deletar_dados_orcamentos: {e}")
+        #print(f"Error in deletar_dados_orcamentos: {e}")
+        print("")
 
 def atualizar_dados_orcamentos(df_orcamento_atualizado, tipo_edicao):
     try:
@@ -117,7 +118,8 @@ def atualizar_dados_orcamentos(df_orcamento_atualizado, tipo_edicao):
                     ))
             conn.commit()
     except Exception as e:
-        print(f"Error updating budget: {e}")
+        #print(f"Error updating budget: {e}")
+        print("")
 
 def atualizar_dados_orcamentos_pagamentos(meninas_ids=None, meninos_ids=None, tipo_pagamento=None, desconto=None, status=None):
     with get_db_connection() as conn:

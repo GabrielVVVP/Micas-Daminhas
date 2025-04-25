@@ -131,7 +131,7 @@ def new_record():
                 endereco = st.text_input("Endereço", value=cliente_info["Endereço"])
                 cpf = st.text_input("CPF", value=cliente_info["CPF"])
                 tipo_evento = st.selectbox("Tipo de Evento", ["Casamento", "Formatura"], index=["Casamento", "Formatura"].index(cliente_info["Tipo Evento"]))
-                tipo_pagamento = st.selectbox("Tipo de Pagamento", ["Cliente Integral", "Individual"], index=["Cliente Integral", "Individual"].index(cliente_info["Tipo Pagamento"]))
+                tipo_pagamento = st.selectbox("Tipo de Pagamento", ["Cliente Integral", "Individual"], index=["Cliente Integral", "Individual"].index(cliente_info["Tipo Pagamento"]), disabled=True)
 
                 col1, col2 = st.columns(2)
                 with col1:

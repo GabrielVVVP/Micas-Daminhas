@@ -1,22 +1,21 @@
 import datetime as dt
 from fpdf import FPDF
-from app.utils.helpers import ensure_month_year_folder
+from app.utils.helpers import ensure_month_year_folder, convert_date_format
 
 
-def exportar_pagamentos_para_pdf(data_inicio, data_fim, total_valor_credito, total_valor_pago_credito, total_valor_debito, total_valor_pago_debito, total_valor_deposito, total_valor_dinheiro, total_retiradas, df_retiradas):
+def exportar_pagamentos_para_pdf(data_inicio, data_fim, total_valor_credito, total_valor_pago_credito, total_valor_debito, total_valor_pago_debito, total_valor_deposito, total_valor_dinheiro, total_retiradas, df_retiradas, total_entradas, df_entradas):
     pdf = FPDF()
     pdf.add_page()
-    pdf.set_font("Arial", size=12)
     
     pdf.set_font("Arial", style='B', size=12)
     pdf.cell(200, 10, txt="Balanço dos Pagamentos", ln=True, align='C')
     pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=f"Período: ({data_inicio} - {data_fim})", ln=True, align='C')
+    pdf.cell(200, 10, txt=f"Período: ({convert_date_format(str(data_inicio))} - {convert_date_format(str(data_fim))})", ln=True, align='C')
     pdf.ln(10)
     
     pdf.set_font("Arial", style='B', size=12)
     pdf.cell(200, 10, txt="Maquininha Pag Seguro Micas Virtual", ln=True)
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Arial", size=10)
     pdf.cell(200, 10, txt=f"Maquininha Pag Seguro Micas Virtual (Valor Total com Taxas): R$ {total_valor_credito + total_valor_debito:.2f}", ln=True)
     pdf.cell(200, 10, txt=f"Maquininha Pag Seguro Micas Virtual (Desconto das Taxas): R$ {(total_valor_credito + total_valor_debito) - (total_valor_pago_credito + total_valor_pago_debito):.2f}", ln=True)
     pdf.cell(200, 10, txt=f"Maquininha Pag Seguro Micas Virtual (Saldo Total sem Taxas): R$ {total_valor_pago_credito + total_valor_pago_debito:.2f}", ln=True)
@@ -24,30 +23,38 @@ def exportar_pagamentos_para_pdf(data_inicio, data_fim, total_valor_credito, tot
 
     pdf.set_font("Arial", style='B', size=12)
     pdf.cell(200, 10, txt="Total", ln=True)
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Arial", size=10)
     pdf.cell(200, 10, txt=f"Maquininha Pag Seguro Micas Virtual (Saldo Total sem Taxas): R$ {total_valor_pago_credito + total_valor_pago_debito:.2f}", ln=True)
     pdf.cell(200, 10, txt=f"Depósito Micas Virtual (Total): R$ {total_valor_deposito:.2f}", ln=True)
     pdf.cell(200, 10, txt=f"Dinheiro (Total): R$ {total_valor_dinheiro:.2f}", ln=True)
     pdf.set_font("Arial", style='B', size=12)
     pdf.cell(200, 10, txt=f"Saldo Total: R$ {total_valor_pago_credito + total_valor_pago_debito + total_valor_deposito + total_valor_dinheiro:.2f}", ln=True)
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Arial", size=10)
+    pdf.ln(10)
+
+    pdf.set_font("Arial", style='B', size=12)
+    pdf.cell(200, 10, txt="Lista de Entradas (Avulsas)", ln=True)
+    pdf.set_font("Arial", size=10)
+    for index, row in df_entradas.iterrows():
+        pdf.cell(200, 10, txt=f"Data: {row['Data']}, Valor: R$ {row['Valor']:.2f}, Observação: {row['Observação']}", ln=True)
     pdf.ln(10)
 
     pdf.set_font("Arial", style='B', size=12)
     pdf.cell(200, 10, txt="Lista de Retiradas", ln=True)
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Arial", size=10)
     for index, row in df_retiradas.iterrows():
         pdf.cell(200, 10, txt=f"Data: {row['Data']}, Valor: R$ {row['Valor']:.2f}, Observação: {row['Observação']}", ln=True)
     pdf.ln(10)
 
     pdf.set_font("Arial", style='B', size=12)
     pdf.cell(200, 10, txt="Caixa Final", ln=True)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt=f"Dinheiro Recebido (Total): R$ {total_valor_dinheiro:.2f}", ln=True)
+    pdf.set_font("Arial", size=10)
+    pdf.cell(200, 10, txt=f"Dinheiro Recebido (Total): R$ {total_valor_pago_credito + total_valor_pago_debito + total_valor_deposito + total_valor_dinheiro:.2f}", ln=True)
+    pdf.cell(200, 10, txt=f"Entradas Avulsas (Total): R$ {total_entradas:.2f}", ln=True)
     pdf.cell(200, 10, txt=f"Retiradas (Total): R$ {total_retiradas:.2f}", ln=True)
     pdf.set_font("Arial", style='B', size=12)
-    pdf.cell(200, 10, txt=f"Caixa (Dinheiro Final): R$ {total_valor_dinheiro - total_retiradas:.2f}", ln=True)
-    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt=f"Caixa (Dinheiro Final): R$ {total_valor_pago_credito + total_valor_pago_debito + total_valor_deposito + total_valor_dinheiro + total_entradas - total_retiradas:.2f}", ln=True)
+    pdf.set_font("Arial", size=10)
 
     origin_path = "data/resumo_de_faturamento/"
     base_path = ensure_month_year_folder(origin_path,data_fim)
@@ -61,7 +68,7 @@ def exportar_producao_para_pdf(orcamento_meninas, orcamento_meninos, nome):
     pdf.set_font("Arial", size=12)
     
     pdf.set_font("Arial", style='B', size=12)
-    pdf.cell(200, 10, txt="Produção de Roupas de Daminhas e Pajens", ln=True, align='C')
+    pdf.cell(200, 10, txt=f"Produção de Roupas de Daminhas e Pajens - Cliente {nome}", ln=True, align='C')
     pdf.ln(10)
     
     # Dados de orcamento_meninas
@@ -69,11 +76,12 @@ def exportar_producao_para_pdf(orcamento_meninas, orcamento_meninos, nome):
     pdf.cell(200, 10, txt="Vestidos - Meninas", ln=True)
     pdf.set_font("Arial", size=12)
     for index, row in orcamento_meninas.iterrows():
-        pdf.set_font("Arial", style='B', size=12)
+        pdf.set_font("Arial", style='B', size=10)
         pdf.cell(0, 10, txt="Participante "+str(index+1), ln=True)
-        pdf.set_font("Arial", size=12)
+        pdf.set_font("Arial", size=8)
         pdf.multi_cell(0, 10, txt=(
-            f"Data: {row['Data']}\n"
+            f"Data: {convert_date_format(str(row['Data']))}\n"
+            f"Nome da Cliente: {nome}\n"
             f"Nome do Participante: {row['Nome do Participante']}\n"
             f"Busto: {row['Busto']} cm\n"
             f"Cintura: {row['Cintura']} cm\n"
@@ -92,11 +100,12 @@ def exportar_producao_para_pdf(orcamento_meninas, orcamento_meninos, nome):
     pdf.cell(200, 10, txt="Trajes - Meninos", ln=True)
     pdf.set_font("Arial", size=12)
     for index, row in orcamento_meninos.iterrows():
-        pdf.set_font("Arial", style='B', size=12)
+        pdf.set_font("Arial", style='B', size=10)
         pdf.cell(0, 10, txt="Participante "+str(index+1), ln=True)
-        pdf.set_font("Arial", size=12)
+        pdf.set_font("Arial", size=8)
         pdf.multi_cell(0, 10, txt=(
             f"Data: {row['Data']}\n"
+            f"Nome da Cliente: {nome}\n"
             f"Nome do Participante: {row['Nome do Participante']}\n"
             f"Ombro-Punho: {row['Ombro-Punho']} cm\n"
             f"Bainha-Calça: {row['Bainha-Calça']} cm\n"
@@ -124,7 +133,7 @@ def gerar_contrato_retirada_pdf(dados):
     pdf.image("./assets/Img/Logo.jpg", x=90, y=8, w=30)
     pdf.ln(10)
     
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Arial", size=10)
     
     # Dados do Contratante
     pdf.cell(200, 10, "1. IDENTIFICAÇÃO DAS PARTES", ln=True, align='L')
@@ -154,8 +163,8 @@ def gerar_contrato_retirada_pdf(dados):
     pdf.cell(200, 10, f"Valor do aluguel: R$ {dados['valor_aluguel']}", ln=True)
     pdf.cell(200, 10, f"Desconto: R$ {dados['valor_desc']:.2f}", ln=True)
     pdf.cell(200, 10, f"Valor Total com Desconto: R$ {dados['valor_aluguel_desc']:.2f}", ln=True)
-    pdf.cell(200, 10, f"Data de retirada: {dados['data_retirada']}", ln=True)
-    pdf.cell(200, 10, f"Data de devolução: {dados['data_devolucao']}", ln=True)
+    pdf.cell(200, 10, f"Data de retirada: {convert_date_format(str(dados['data_retirada']))}", ln=True)
+    pdf.cell(200, 10, f"Data de devolução: {convert_date_format(str(dados['data_devolucao']))}", ln=True)
     pdf.ln(10)
     
     # Cláusulas
@@ -192,11 +201,11 @@ def gerar_contrato_retirada_todos_pdf(dados):
     pdf.add_page()
     pdf.set_font("Arial", style='B', size=16)
     pdf.ln(40)
-    pdf.cell(200, 10, "CONTRATO DE ALUGUEL DE ROUPAS DE DAMINHA/PAJEM", ln=True, align='C')
+    pdf.cell(200, 10, "CONTRATO DE ALUGUEL DE ROUPAS DE DAMINHAS/PAJENS", ln=True, align='C')
     pdf.image("./assets/Img/Logo.jpg", x=90, y=8, w=30)
     pdf.ln(10)
     
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Arial", size=10)
     
     # Dados do Contratante
     pdf.cell(200, 10, "1. IDENTIFICAÇÃO DAS PARTES", ln=True, align='L')
@@ -230,8 +239,8 @@ def gerar_contrato_retirada_todos_pdf(dados):
         pdf.cell(200, 10, f"Valor do aluguel: R$ {dados['valor_aluguel'][i]:.2f}", ln=True)
         pdf.cell(200, 10, f"Desconto: R$ {dados['valor_desc'][i]:.2f}", ln=True)
         pdf.cell(200, 10, f"Valor Total com Desconto: R$ {dados['valor_aluguel_desc'][i]:.2f}", ln=True)
-        pdf.cell(200, 10, f"Data de retirada: {dados['data_retirada'][i]}", ln=True)
-        pdf.cell(200, 10, f"Data de devolução: {dados['data_devolucao'][i]}", ln=True)
+        pdf.cell(200, 10, f"Data de retirada: {convert_date_format(str(dados['data_retirada'][i]))}", ln=True)
+        pdf.cell(200, 10, f"Data de devolução: {convert_date_format(str(dados['data_devolucao'][i]))}", ln=True)
         pdf.ln(5)
         total_valor_aluguel += dados['valor_aluguel'][i]
         total_desc_aluguel += dados['valor_desc'][i]
@@ -280,7 +289,7 @@ def gerar_contrato_devolucao_pdf(dados):
     pdf.cell(200, 10, "CONTRATO DE DEVOLUÇÃO DE ROUPA DE DAMINHA/PAJEM", ln=True, align='C')
     pdf.image("./assets/Img/Logo.jpg", x=90, y=8, w=30)
     pdf.ln(10)
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Arial", size=10)
     
     # Dados do Contratante
     pdf.cell(200, 10, "1. IDENTIFICAÇÃO DAS PARTES", ln=True, align='L')
@@ -307,7 +316,7 @@ def gerar_contrato_devolucao_pdf(dados):
     pdf.cell(200, 10, f"Acessórios do item devolvido: {dados['acessorios']}", ln=True)
     pdf.cell(200, 10, f"Observação do item devolvido: {dados['obs']}", ln=True)
     pdf.cell(200, 10, f"Estado na devolução: {dados['estado_devolucao']}", ln=True)
-    pdf.cell(200, 10, f"Data de devolução: {dados['data_devolucao']}", ln=True)
+    pdf.cell(200, 10, f"Data de devolução: {convert_date_format(str(dados['data_devolucao']))}", ln=True)
     pdf.ln(10)
     
     # Cláusulas
@@ -344,10 +353,10 @@ def gerar_contrato_devolucao_todos_pdf(dados):
     pdf.add_page()
     pdf.set_font("Arial", style='B', size=16)
     pdf.ln(40)
-    pdf.cell(200, 10, "CONTRATO DE DEVOLUÇÃO DE ROUPAS DE DAMINHA/PAJEM", ln=True, align='C')
+    pdf.cell(200, 10, "CONTRATO DE DEVOLUÇÃO DE ROUPAS DE DAMINHAS/PAJENS", ln=True, align='C')
     pdf.image("./assets/Img/Logo.jpg", x=90, y=8, w=30)
     pdf.ln(10)
-    pdf.set_font("Arial", size=12)
+    pdf.set_font("Arial", size=10)
     
     # Dados do Contratante
     pdf.cell(200, 10, "1. IDENTIFICAÇÃO DAS PARTES", ln=True, align='L')
@@ -376,7 +385,7 @@ def gerar_contrato_devolucao_todos_pdf(dados):
         pdf.cell(200, 10, f"Acessórios do item devolvido: {dados['acessorios'][i]}", ln=True)
         pdf.cell(200, 10, f"Observação do item devolvido: {dados['obs'][i]}", ln=True)
         pdf.cell(200, 10, f"Estado na devolução: {dados['estado_devolucao'][i]}", ln=True)
-        pdf.cell(200, 10, f"Data de devolução: {dados['data_devolucao'][i]}", ln=True)
+        pdf.cell(200, 10, f"Data de devolução: {convert_date_format(str(dados['data_devolucao'][i]))}", ln=True)
         pdf.ln(5)
     
     pdf.ln(10)

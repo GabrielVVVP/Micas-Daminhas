@@ -1,6 +1,6 @@
 import streamlit as st
 import time
-from app.pages import signup
+from app.pages import signup, mstr_key
 from app.utils.helpers import is_valid_email, is_valid_password
 from app.utils.users import get_user_info, update_user, update_user_password  # Assuming these functions exist
 
@@ -11,7 +11,7 @@ def profile():
     if user_info["type"] == "Admin":
         options_profile = st.selectbox(
         "Selecione o que deseja fazer na sua conta:",
-        ("Perfil","Editar Perfil","Alterar Senha","Criar Nova Conta")
+        ("Perfil","Editar Perfil","Alterar Senha","Criar Nova Conta","Modificar a Chave Mestre")
         )
     if options_profile == "Editar Perfil":
         with st.container(border=True):
@@ -45,6 +45,9 @@ def profile():
     elif options_profile == "Criar Nova Conta":
         with st.container(border=True):
             signup.signup()
+    elif options_profile == "Modificar a Chave Mestre":
+        with st.container(border=True):
+            mstr_key.change_master_key()
     else:
         with st.container(border=True):
             st.title("Perfil - Micas Daminhas")
